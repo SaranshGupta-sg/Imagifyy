@@ -1,10 +1,16 @@
 import React from 'react'
 import { stepsData } from '../assets/assets'
+import { motion } from 'motion/react'
 
 const Steps = () => {
     return (
         <>
-            <div className="flex flex-col items-center justify-center my-28 px-4">
+            <motion.div
+                initial={{ opacity: 0.2, y: 100 }}
+                transition={{ duration: 1 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="flex flex-col items-center justify-center my-28 px-4">
                 <h1 className="text-4xl sm:text-5xl font-bold mb-3 text-gray-900 tracking-tight">
                     How It Works
                 </h1>
@@ -22,7 +28,7 @@ const Steps = () => {
                    hover:shadow-xl hover:-translate-y-1 hover:bg-white/60
                    transition-all duration-300"
                         >
-                            <div className="w-14 h-14 flex items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-blue-500 shadow-md">
+                            <div className="w-14 h-14 flex items-center justify-center rounded-xl bg-linear-to-br from-violet-500 to-blue-500 shadow-md">
                                 <img src={item.icon} alt="" className="w-8 h-8" />
                             </div>
 
@@ -37,7 +43,7 @@ const Steps = () => {
                         </div>
                     ))}
                 </div>
-            </div>
+            </motion.div>
 
         </>
     )

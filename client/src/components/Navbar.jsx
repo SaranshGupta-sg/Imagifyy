@@ -39,7 +39,7 @@ const NavBar = () => {
                                 <p onClick={() => navigate('/buy')} className="cursor-pointer text-gray-700 hover:text-black transition duration-300">
                                     Pricing
                                 </p>
-                                <button onClick={()=>setShowLogin(true)} className="cursor-pointer bg-linear-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-7 py-2 sm:px-4 rounded-2xl text-sm shadow hover:shadow-lg transition-all duration-300">
+                                <button onClick={() => setShowLogin(true)} className="cursor-pointer bg-linear-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-7 py-2 sm:px-4 rounded-2xl text-sm shadow hover:shadow-lg transition-all duration-300">
                                     Login
                                 </button>
                             </div>

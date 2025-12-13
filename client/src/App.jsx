@@ -1,4 +1,4 @@
-import {React, useContext} from 'react'
+import { React, useContext } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import Home from './pages/Home'
 import BuyCredit from './pages/BuyCredit'
@@ -10,7 +10,7 @@ import { AppContext } from './context/AppContext'
 
 
 const App = () => {
-      const{showLogin} = useContext(AppContext)
+  const { showLogin } = useContext(AppContext)
   return (
     <div className='px-4 sm:px10 md:px-14 lg:px-28 min-h-screen bg-linear-to-b from-teal-50 to-orange-50'>
       <Navbar />
@@ -20,7 +20,7 @@ const App = () => {
         <Route path='/result' element={<Result />} />
         <Route path='/buy' element={<BuyCredit />} />
       </Routes>
-      <Footer/>
+      <Footer />
     </div>
   )
 }
