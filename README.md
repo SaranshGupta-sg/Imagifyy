@@ -176,7 +176,7 @@ same code likheng jo uppr wale button k liye likha tha
 
 isme ek error aaya tha ye sb add krne k baad bhi login page open nhi ho rha tha islie login.jsx me gaye aur
  return (
-    <div className='fixed 
+    <div className=fixed 
 
 fixed property add kari thi iske baad open ho gya login page wahi pr hi aur scrool bhi nahi hua
 
@@ -200,3 +200,121 @@ import { motion } from "motion/react"
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       className='min-h-[80vh] text-center pt-14 mb-10'>
+
+
+
+
+
+
+
+
+
+
+
+
+Server - Backend Start
+
+
+
+
+
+
+
+
+
+
+'npm init' se start kiya package.json aaya fir iss file me 
+  "type": "module",
+ye wala type add kiya kyoki ye import me help krta h ese -
+
+Change all require → import
+// ❌ wrong now
+const fs = require('fs')
+
+// ✅ correct
+import fs from 'fs'
+
+
+iske baad npm i multiple packages
+express(Create a server Handle routes (/login, /signup, /api/users) Receive requests and send responses),
+cors(helps to connect backend with frontend, A middleware that allows frontend and backend to talk to each other.), 
+dotenv(create .env files and use it in server, Used to store secret data in .env file.), 
+nodemon(restart the backend server whenever we make any changes in code file, Automatically restarts the server when you change code.), 
+form-data(Used to send files and form data (images, PDFs, etc)., Helps in:Image upload, Profile photo upload, Sending files to APIs)
+jsonwebtoken(Used for authentication (login system)., How it works:User logs in->Server generates a token->Token is sent to frontend->Frontend sends token with every request)
+mongoose(connect backend with mongodb database, A library to connect MongoDB with Node.js., Create schemas, Save data, Read, update, delete data) 
+axios(helps to make api call, Calling third-party APIs, Payment gateways) 
+bcrypt(help to bcrypt the password, Used to encrypt passwords., Never store passwords as plain text.) 
+razorpay(online payment gatepay, An online payment gateway.) 
+
+
+
+iske baad server.js file banaya jisme
+
+import express from 'express'  -> Imports Express framework.
+import cors from 'cors'        -> Imports CORS middleware.
+import 'dotenv/config'         -> Loads .env file automatically.
+
+const PORT = process.env.PORT || 4000  -> Uses port from .env, if not available then uses 4000.   (PORT = Computer ke andar ek specific gate jahan server requests receive karta hai.)
+const app = express()          -> Express ka server instance banaya ja raha hai (yahin se API aur routes define honge).
+
+app.use(express.json())        ->Frontend se jo data JSON format me aata hai (POST / login / signup), usko samajhne ke liye zaroori hai.
+app.use(cors())                ->Enables CORS for all routes. (Ye frontend (React, Vite) ko backend API call karne deta hai without error.)
+
+app.get('/', (req, res) => res.send("API Working"))    -> Creates a GET API at root (/). (Jab browser me localhost:4000 open karoge, 
+ye message dikhega → API Working 
+Ye basic test hota hai server chal raha hai ya nahi.)
+
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`))   -> Starts the server on given port. (Server ko start karta hai aur batata hai kis port pe chal raha hai.)
+
+
+
+iske baad package.json me 
+    "server": "nodemon server.js"
+ye add kiya kyoki 'Code change karte hi backend server automatically restart ho jaye Isliye add karte hain.'
+
+
+iske baad mongodb website pe gaye waha imagify project k naam se naya project banaya aur
+.env file me 
+MONGODB_URI = "mongodb+srv://saranshg2911_db_user:Egnay1C5pp1N7fbC@cluster0.zhtcded.mongodb.net"
+
+iske baad config folder banaya file name mongodb.js
+
+import mongoose from "mongoose";
+
+const connectDB = async () => {
+    mongoose.connection.on('connected',()=>{    -> Jab MongoDB connect, error, ya disconnect hota hai — yeh batata hai kya ho raha hai
+        console.log("Database Connected");
+    })
+    await mongoose.connect(`${process.env.MONGODB_URI}/Imagify`)
+}
+export default connectDB
+
+iske baad server.js me
+import connectDB from './config/mongodb.js'
+await connectDB()  ->taki apne server me database connect ho jaye 
+terminal me mssg aaya "Database Connected" Server running on port 4000
+ 
+ab models naam ka folder banaya jisme schema or models store kr ske mtlb user k information store kr ske
+ab isme ek file banayi userModel.js
+
+import mongoose from "mongoose";
+
+const userSchema = new mongoose.Schema({
+    name: { type: String, requied: true },
+    email: { type: String, requied: true, unique: true },
+    password: { type: String, requied: true },
+    creditNalance: { type: Number, default: 5 },
+})
+
+const userModel = mongoose.models.user || mongoose.model("user", userSchema)   (pehle check karega ki user ne jo information di h wo pehle se available h ya nhi agr h to 'mongoose.models.user' nahi h to new create karega 'mongoose.model("user", userSchema)')
+
+export default userModel;
+
+iske baad folder banaya 'controllers' file 'userController.js' 
+in this we create controller function for user (regitration , login, logout)
+
+Registration k liye user.Model ka use karenge
+
+import userModel from "../models/userModel.js";
+import bcrypt from 'bcrypt'      ->for passwords
