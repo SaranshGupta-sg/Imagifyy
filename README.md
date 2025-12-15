@@ -317,4 +317,192 @@ in this we create controller function for user (regitration , login, logout)
 Registration k liye user.Model ka use karenge
 
 import userModel from "../models/userModel.js";
-import bcrypt from 'bcrypt'      ->for passwords
+import bcrypt from 'bcrypt'      ->Password ko encrypt (hash) karne ke liye, Taaki plain password database me store na ho
+import jwt from 'jsonwebtoken'   ->Login / register ke baad token generate karne ke liye
+
+const registerUser = async (req, res) => {              ->Ye register API controller hai, req = frontend se aaya data, res = frontend ko response
+    try {
+        const {name,email,password} = req.body;         ->Frontend se bheje gaye form ka data nikal rahe hain
+
+        if (!name || !email || !password) {                                   
+            return res.json({success:false, message: 'Missing Details'})      ->Agar koi bhi field missing hai → user ko error bhejo
+       }
+
+       const salt = await bcrypt.genSalt(10)                                  -> to understand salt scroll down
+       const hashedPassword = await bcrypt.hash(password, salt)               -> to understand hash scroll down
+
+       const userData = {
+        name,
+        email,
+        password: hashedPassword
+       }                                                                   ->Database me save karne ke liye object ready
+
+       const newUser = new userModel(userData)
+       const user = await newUser.save()                              ->MongoDB me new user create & save ho raha hai
+
+    const token=jwt.sign({id:user._id},process.env.JWT_SECRET)->User ki ID se login token banaya Ye token future requests me user ko verify karega
+
+       res.json({success: true, token, user: {name: user.name}})     ->Frontend ko bol rahe hain:
+✔ Register successful
+✔ Token bhej rahe hain
+✔ User ka naam bhej rahe hain
+ 
+    } catch (error) {
+        console.log(error);
+        res.json({success: false, message: error.message})   ->Agar kuch bhi galat ho → error handle karo, Server crash na ho
+    }
+}
+
+Salt = Salt ek random value hoti hai Jo password ko aur zyada secure banati hai
+Salt = Extra Security Layer
+
+Salt ek random string hoti hai
+jo password ke saath add hoti hai
+taaki password aur zyada secure ho jaye
+eg- 
+password = "123456"
+salt = "x@9K!"
+hashed = "98x#Q@!"
+
+bcrypt.genSalt(10)
+
+10 bolta hai kitni baar encryption process repeat hoga
+Isse kehte hain salt rounds.
+
+const salt = await bcrypt.genSalt(10)
+Encryption heavy process hota hai
+Isliye async hota hai
+Taaki server block na ho
+
+Salt ka use kahan hota hai?
+const hashedPassword = await bcrypt.hash(password, salt)
+Salt + Password = Hashed Password
+
+Complete Flow (Visual)
+User Password:  mypassword
+genSalt(10) →  $2b$10$AbCd...
+hash(password + salt) →  $2b$10$AbCd...XYZ
+
+Kya salt database me store hota hai?
+YES, but automatically
+👉 bcrypt hash ke andar hi salt store hota hai
+👉 Alag se save karne ki zarurat nahi
+
+Login time pe kaise match hota hai?
+bcrypt.compare(enteredPassword, storedHashedPassword)
+bcrypt khud:
+salt nikalta hai
+password encrypt karta hai
+compare karta hai
+
+Interview One-Liner 💡
+Salt ek random value hoti hai jo password hashing ko strong banati hai aur rainbow-table attacks se bachati hai.
+
+iske baad login ke liye same file m code
+
+const loginUser = async (req, res) => {      ->Ye ek async function hai jo user ko login karata hai
+    try {
+        const { email, password } = req.body;           ->Frontend se jo email aur password aaya hai, use body se nikal rahe hain
+        const user = await userModel.findOne({ email })  ->MongoDB me check kar rahe hain ki is email ka user exist karta hai ya nahi
+
+        if (!user) {
+            return res.json({ success: false, message: 'User does not exist' }) -> agr user exist nhi krta mongodb m to usko ye error message bhejo
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password)        ->User ka plain password
+aur database me hashed password
+bcrypt se compare ho raha hai
+
+        if (isMatch) {
+            const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET)  ->Ye ek login token hai Jisse pata chalega user authenticated hai
+
+            res.json({ success: true, token, user: { name: user.name } })    ->Frontend ko token aur user ka naam bhej rahe hain
+        } else {
+            return res.json({ success: false, message: 'Invalid credentials' }) ->Password match nhi hua to ye mssg bhejo
+        }
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message })  ->Agar koi error aaye to server crash na ho
+    }
+}
+
+export  {registerUser, loginUser}
+
+
+iske baad to create API we make folder Routes and file userRoutes.js
+
+import express from 'express'
+import { registerUser, loginUser } from '../controllers/userController.js'
+
+const userRouter = express.Router()
+
+userRouter.post('/register', registerUser)     ->Jab koi POST /register request karega → registerUser function chalega
+userRouter.post('/login', loginUser)           ->POST /login request pe loginUser function chalega
+
+export default userRouter
+
+iske baad ab router k liye route banenge to 'server.js file m jaenge aur 
+import userRouter from './routes/userRoutes.js'
+app.use('/api/user', userRouter)
+
+ye dono likhne k baad apna route select ho gaya 
+ab ise try karne k liye apn postman ka use karenge jisme 
+http://localhost:4000/api/user/register 
+http://localhost:4000/api/user/login
+ye dono link se check karenge
+
+
+ab postman api download karenge
+
+isme REST api m jaenge New Collection bana k apne project ka naam likhenge Imagify and POST select karenge usme 
+http://localhost:4000/api/user/register 
+ye wala link paste karenge 
+raw select karenge
+object banaenge
+{
+    "name": "Saransh"
+    "email": "gupta@gmail.com",
+    "password": "1234321"
+}
+
+and then send 
+iske baad mongodb database m jaenge
+clusters m jaenge aur ye oject apn ko show hoga
+
+ab apn login check karenge
+http://localhost:4000/api/user/login
+object m name hata denge kyoki user already sign up kr chuka hai
+{
+    "email": "gupta@gmail.com",
+    "password": "1234321"
+}
+
+iske baad postman m JSON response ye aaya
+
+{
+    "success": true,
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5M2VmNGExN2U2MThlZjhjMDM3MjUwMSIsImlhdCI6MTc2NTczMzc2MX0.sCYhFe3ll3ixcgowzv7BuQ1RLRV94GOcZM5FG5hsoOU",
+    "user": {
+        "name": "Saransh"
+    }
+}
+
+agr email or password m kuch galat hota to 
+email wrong -
+to JSON response 
+{
+    "success": false,
+    "message": "User does not exist"
+}
+
+password wrong -
+to JSON response 
+{
+    "success": false,
+    "message": "Invalid credentials"
+}
+
+
+ab iske baad apn userCredit k liye api create karenge userController.js file m
+
+

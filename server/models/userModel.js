@@ -4,7 +4,7 @@ const userSchema = new mongoose.Schema({
     name: { type: String, requied: true },
     email: { type: String, requied: true, unique: true },
     password: { type: String, requied: true },
-    creditNalance: { type: Number, default: 5 },
+    creditBalance: { type: Number, default: 5 },
 })
 
 const userModel = mongoose.models.user || mongoose.model("user", userSchema)
