@@ -505,4 +505,22 @@ to JSON response
 
 ab iske baad apn userCredit k liye api create karenge userController.js file m
 
+const userCredits = async (req, res) => {     -> Ye ek async controller function hai jo user ke credits return karta hai
+    try {
+        const { userId } = req.body           ->Frontend / Postman se jo request aayi hai uske body ke andar se userId nikal rahe hain
+
+        const user = await userModel.findById(userId)    ->MongoDB database me _id ke basis par user ko search kiya ja raha hai
+        res.json({ success: true, credits: user.creditBalance, user: { name: user.name } })    ->Frontend ko JSON response bhej rahe ho jisme:
+success: true → request successful
+credits → user ke bache hue credits
+user.name → user ka naam
+⚠️ Password intentionally nahi bhej rahe (security reason)
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message })   -> Agar code me kahin error aa jaye
+(invalid userId, DB issue, etc.)
+to server crash na ho
+aur error message frontend ko mil jaye
+    }
+}
 
