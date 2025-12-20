@@ -5,8 +5,17 @@ npm run dev
 git add .
 git commit -m "new"
 git push origin main
-
+sara@gmail.com
+hiiheloo
+rhtuyg thtrh 
 After downloading Framer motion 
+
+frekjgrhe
+
+
+
+
+
 
 import in which page where needed
 in Header.jsx - 
@@ -523,4 +532,409 @@ to server crash na ho
 aur error message frontend ko mil jaye
     }
 }
+
+ab iske baad middlewares folder banaya usme auth.js file
+
+auth ->
+
+auth.js ek middleware file hoti hai
+jo check karti hai:
+“User logged in hai ya nahi?”
+User authorized hai ya nahi
+Token valid hai ya nahi
+
+
+import jwt from 'jsonwebtoken'                              -> JWT token ko verify karne ke liye library
+
+const userAuth = async (req, res, next) => {          ->Ye middleware hai Jo route se pehle chalega Aur check karega user logged in hai ya nahi
+    const { token } = req.headers     -> Frontend request ke headers me token bhejta hai, Example: headers: { "token": "eyJhbGciOiJIUzI1..." }
+
+    if (!token) {                 
+        return res.json({ success: false, message: 'Not Authorized. Login Again' })
+    }         ->Agar token hi nahi aaya Matlab user login nahi hai ❌
+
+    try {
+        const tokenDecode = jwt.verify(token, process.env.JWT_SECRET) 
+        ->JWT_SECRET se token ko verify kar rahe hain Fake token hoga → error throw karega
+
+        if (tokenDecode.id) {
+            req.body.userId = tokenDecode.id ->Token ke andar jo userId hai
+use request ke body me daal diya
+Taaki controller use kar sake
+📌 Ab controller ko userId body se lene ki zarurat nahi
+            
+            next(); ->Sab sahi hai Ab request ko next controller tak bhejo
+        
+        } else {
+            return res.json({ success: false, message: 'Not Authorized. Login Again' })
+        }           ->Agar token invalid / expired hai To request reject ho jaayegi
+
+    } catch (error) {
+        return res.json({ success: false, message: 'Not Authorized. Login Again' })
+    }
+}
+
+export default userAuth
+
+Request
+  ↓
+Headers (token)
+  ↓
+userAuth middleware
+  ↓
+token verify
+  ↓
+req.body.userId set
+  ↓ next()
+Controller
+
+🎯 INTERVIEW ONE-LINER
+Ye middleware JWT token verify karke userId ko request me attach karta hai aur unauthorized users ko protected routes access karne se rokta hai.
+
+
+Controller = function jo actual kaam karta hai
+
+Jaise:
+user register karna
+user login karna
+user ke credits lana
+database se data lena / bhejna
+
+Example Controller
+const userCredits = async (req, res) => {
+   const userId = req.body.userId
+   const user = await userModel.findById(userId)
+   res.json(user)
+}
+Controller wo jagah hai jahan
+request ka data aata hai,
+database se baat hoti hai,
+response bheja jata hai
+
+🧱 BACKEND STRUCTURE (REAL LIFE)
+Request (Postman / Frontend)
+   ↓
+Middleware (auth.js)
+   ↓
+Controller (userController.js)
+   ↓
+Response
+
+AB CONFUSION WALA PART CLEAR KARTE HAIN
+Token ke andar jo userId hai use request ke body me daal diya
+Taaki controller use kar sake
+
+🔍 ISKA MATLAB KYA HAI?
+Pehle (Without Middleware)
+
+Frontend ko bhejna padta tha:
+
+{
+  "userId": "65ab1234...",
+  "credits": 10
+}
+❌ Problem:
+User fake userId bhej sakta hai
+Security risk 🔴
+
+✅ Ab (With Auth Middleware)
+Frontend sirf token bhejta hai:
+Headers:
+{
+  "token": "JWT_TOKEN"
+}
+Middleware kya karta hai?
+const tokenDecode = jwt.verify(token, JWT_SECRET)
+req.body.userId = tokenDecode.id
+
+Token ke andar se real userId nikala
+Aur req.body me daal diya
+
+🤯 AB CONTROLLER KO KYA MILTA HAI?
+Controller:
+const userCredits = async (req, res) => {
+   console.log(req.body.userId) // ✅ mil jaata hai
+}
+
+Controller ko lagta hai jaise
+userId body me hi aaya ho
+Lekin asal me middleware ne daala hai
+
+🎯 IS LINE KA MATLAB (FINAL)
+
+Ab controller ko userId body se lene ki zarurat nahi
+Matlab:
+❌ Pehle:
+const { userId } = req.body   // frontend se aata tha
+
+✅ Ab:
+// userId middleware ne daala
+const userId = req.body.userId
+
+👉 Frontend se userId mat bhejo
+👉 Sirf token bhejo
+👉 Backend khud userId nikale
+
+🛡️ SECURITY ADVANTAGE
+Pehle	                            Ab
+User userId change kar sakta tha	User kuch change nahi kar sakta
+Insecure	                        Secure 🔐
+Frontend pe dependent	            Backend control me
+
+✅ ONE LINE SUMMARY
+
+Middleware user ki identity verify karke userId request me attach karta hai, taaki controller safely database operation kar sake bina frontend pe trust kiye.
+
+
+ab userRoutes.js me change karenge
+
+import { registerUser, loginUser, userCredits } from '../controllers/userController.js'
+import userAuth from '../middlewares/auth.js'
+
+userRouter.post('/credits',userAuth , userCredits)
+
+// http://localhost:4000/api/user/credits
+
+userAuth(middlewares) beech me rakha h taki controller ko userId body se lene ki zarurat nahi
+
+
+ab iske baad check karenge to postman m jake 
+http://localhost:4000/api/user/credits
+ye link chalaenge aur headers m jake key me token aur value me jo bhi token ki value ho wo add krke send kr denge
+
+{
+    "success": true,
+    "credits": 5,
+    "user": {
+        "name": "Saransh"
+    }
+}
+
+to credits ka key aajaega aur pta chal jaega ki kitne credits left hai
+
+ab iske baad api create karenge to generate the image creating prompt 
+
+to controller folder m imageController.js file banaenge 
+
+import userModel from "../models/userModel.js"; -> MongoDB user collection
+import FormData from "form-data";               -> API ko form format me data bhejne ke liye
+import axios from "axios";
+
+export const generateImage = async (req, res) => {
+    try {
+        const { userId, prompt } = req.body;    ->userId → auth middleware se aata hai, prompt → user ka likha hua text
+
+        const user = await userModel.findById(userId);  -> Check karta hai user exist karta hai ya nahi
+
+        if (!user || !prompt) {
+            return res.json({ success: false, message: "Missing Details" });
+        }  ->❌ User nahi mila ❌ Prompt empty 👉 To request reject
+
+        if (user.creditBalance <= 0) {   -> Agar credit 0 ho ya negative ho → image generate nahi
+            return res.json({
+                success: false,
+                message: "No Credit Balance",
+                creditBalance: user.creditBalance
+            });
+        }
+
+        const formData = new FormData();
+        formData.append("prompt", prompt);      -> Clipdrop API ko prompt bhejne ke liye function banaya h formData
+
+        const { data } = await axios.post(     
+            "https://clipdrop-api.co/text-to-image/v1",
+            formData,
+            {
+                headers: {
+                    "x-api-key": process.env.CLIPDROP_API,
+                },
+                responseType: "arraybuffer",
+            }
+        );           -> Clipdrop API se image binary form me aati hai
+
+        const base64Image = Buffer.from(data, "binary").toString("base64");   -> Binary → Base64 image, Browser-friendly image banayi
+        const resultImage = `data:image/png;base64,${base64Image}`;
+
+        await userModel.findByIdAndUpdate(user._id, {
+            creditBalance: user.creditBalance - 1,
+        });                           -> User ka 1 credit use ho gaya to -1 kr diya
+
+        res.json({
+            success: true,
+            message: "Image Generated",
+            creditBalance: user.creditBalance - 1,
+            resultImage,
+        });                  -> resonse bhej diya frontend ko
+
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+user.creditBalance <= 0
+iski jagah ye likha tha
+user.creditBalance === 0 || userModel.creditBalance < 0
+yaha pr userModel schema hai, actual user nahi 
+
+ab image generate karane k liye clipdrop ka use kiya jisme 100 credit free h
+islie .env file m 
+CLIPDROP_API = "20ee2681243de91ff7ddd1826a68d1fefce38e207d379f33130203320f77127e567d0aca916b9f2ceff087c04595987f"
+
+const { data } = await axios.post(     
+            "https://clipdrop-api.co/text-to-image/v1",
+            formData,
+            {
+                headers: {
+                    "x-api-key": process.env.CLIPDROP_API,
+                },
+                responseType: "arraybuffer",
+            }
+        );  -> baki ye links aur header sb clipdrop se hi likha h
+
+ab ye controller function bn gaya jo prompt lega aur image generate krega aur bhej dega jo screen p display hoga
+
+ab iske baad routes folder m imageRoutes.js file banaenge jo
+Agar koi /api/image/generate pe aaye
+→ pehle userAuth check karo
+→ phir generateImage kaam karega
+
+import express from 'express'                               -> Routing ke liye express chahiye
+import {generateImage} from '../controllers/imageController.js'  ->✔ Ye actual logic hai:
+prompt lena
+credit check
+AI API call
+image return
+👉 Route sirf call karta hai
+👉 Logic controller me hota hai
+
+import userAuth from '../middlewares/auth.js'       ->✔ Ye security guard hai 🛡️
+✔ Check karega:
+token hai ya nahi
+token valid hai ya nahi
+userId nikalega
+ 
+const imageRouter = express.Router()   ->✔ Express ka mini-app  ✔ Isme image related routes rakhenge
+
+imageRouter.post('/generate-image', userAuth, generateImage)     ->Ye tab banta hai jab server.js me use hota hai
+
+export default imageRouter
+
+// http://localhost:4000/api/image/generate-image
+
+ye image ka route bana diya 
+
+fir server.js me iska link ready kiya jisse work kare
+import imageRouter from './routes/imageRoutes.js'
+app.use('/api/image', imageRouter)
+
+iske baad postman me gaye waha 
+http://localhost:4000/api/image/generate-image
+ye link use kiya post pe aur headers m token aur uski value add kari 
+aur body m raw me jake ye object likha
+{
+    "prompt": "flying Cat"
+}
+
+aur fir ye response aaya
+    "success": true,
+    "message": "Image Generated",
+    "creditBalance": 4,
+    "resultImage": "data:image/png;base64,  -> ye aage bhi bahot bada hai 
+
+ab isme ek credit bhi km ho gaya kyoki ek image genereate ho gayi
+
+
+
+
+
+
+
+ab backend ko frontend se connect karenge jisme  cors ka use hoga
+
+
+
+
+
+ab client me gaye context folder m AppContext.jsx file m 
+const [token, setToken] = useState(localStorage.getItem('token'))
+const [credit, setCredit] = useState(false)
+
+    const backendUrl = import.meta.env.VITE_BACKEND_URL
+
+    const value = {
+        user, setUser, showLogin, setShowLogin, backendUrl, token, setToken, credit, setCredit
+    }
+
+ye token aur credit add kiye aur backendurl jo h vo .env file se le liya jo nayi bahayi 
+
+.env file me
+VITE_BACKEND_URL=http://localhost:4000
+
+ab iske baad toastify aur axios npm install kiye 
+
+aur fir App.jsx m jake
+import { ToastContainer } from 'react-toastify';
+<ToastContainer position='bottom-right'/>
+add kiya
+
+fir uske baad login.jsx me jake
+
+import axios from 'axios'
+import { toast } from 'react-toastify'
+
+const Login = () => {
+  const [state, setState] = useState('Login')
+  const { setShowLogin, backendUrl, setToken, setUser } = useContext(AppContext)
+
+  console.log("Backend URL 👉", backendUrl)
+
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+
+  const onSubmitHandler = async (e) => {
+    e.preventDefault();
+
+    try {
+      if (state === 'Login') {
+        const {data} = await axios.post(backendUrl + '/api/user/login', {email, password}) 
+
+        if (data.success) {
+        setToken(data.token)
+        setUser(data.user)
+        localStorage.setItem('token', data.token)
+        setShowLogin(false)
+
+      }else{
+        toast.error(data.message)
+      }                                                   -> ye to iske liye jb user already login tb
+
+      } else {
+        const {data} = await axios.post(backendUrl + '/api/user/register', {name, email, password}) 
+
+        if (data.success) {
+        setToken(data.token)
+        setUser(data.user)
+        localStorage.setItem('token', data.token)
+        setShowLogin(false)
+        
+      }else{
+        toast.error(data.message)
+      }                                                  -> ye ab naya user ho tb
+      }
+
+    } catch (error) {
+      toast.error(error.message)
+    }
+  }
+
+ye axios wala code lika aur form m jake onSubmitHandler add kiya aur name email aur password k liye onhange add kiya
+
+ <motion.form onSubmit={onSubmitHandler}
+
+ <input onChange={e=> setName(e.target.value)} value={name} type="text" className='outline-none text-sm' placeholder='Full Name' required />
+ <input onChange={e=> setEmail(e.target.value)} value={email} type="email" className='outline-none text-sm' placeholder='Email-Id' required />
+ <input onChange={e => setPassword(e.target.value)} value={password} type="password" className='outline-none text-sm' placeholder='Password' required />
+
 
