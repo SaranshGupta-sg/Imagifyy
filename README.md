@@ -13,7 +13,7 @@ After downloading Framer motion
 frekjgrhemghnhjk
 ki   nvvgyd j,hyt
 
-m
+mmnhjk
 
 
 import in which page where needed
