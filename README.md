@@ -10,10 +10,10 @@ hiiheloo
 rhtuyg thtrh 
 After downloading Framer motion 
 
-frekjgrhe
-ki
+frekjgrhemghnhjk
+ki   nvvgyd j,hyt
 
-
+m
 
 
 import in which page where needed
