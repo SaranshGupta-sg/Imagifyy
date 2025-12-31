@@ -6,15 +6,9 @@ git add .
 git commit -m "new"
 git push origin main
 sara@gmail.com
-hiiheloo
-rhtuyg thtrh 
+mEJde@gmail.com
+1234321
 After downloading Framer motion 
-mnhj
-frekjgrhemghnhjk
-ki   nvvgyd j,hytbjghkjihiijj hi babyfewhhu4euh
-
-mmnhjk
-hjkl
 
 import in which page where needed
 in Header.jsx - 
@@ -935,5 +929,4 @@ ye axios wala code lika aur form m jake onSubmitHandler add kiya aur name email 
  <input onChange={e=> setName(e.target.value)} value={name} type="text" className='outline-none text-sm' placeholder='Full Name' required />
  <input onChange={e=> setEmail(e.target.value)} value={email} type="email" className='outline-none text-sm' placeholder='Email-Id' required />
  <input onChange={e => setPassword(e.target.value)} value={password} type="password" className='outline-none text-sm' placeholder='Password' required />
-
 

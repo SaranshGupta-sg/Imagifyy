@@ -15,8 +15,9 @@ const AppContextProvider = (props) => {
     const loadCreditsData = async () => {
         try {
             const { data } = await axios.get(backendUrl + '/api/user/credits', { headers: { token } })
-console.log("API credits:", data.credits)
-console.log("API user:", data.user)
+            console.log("API credits:", data.credits)
+            console.log("API user:", data.user)
+            
             if (data.success) {
                 setCredit(data.credits)
                 setUser(data.user)
@@ -25,9 +26,9 @@ console.log("API user:", data.user)
             console.log(error)
             toast.error(error.message)
         }
-        
+
     }
-    
+
 
     const logout = () => {
         localStorage.removeItem('token')
@@ -37,7 +38,7 @@ console.log("API user:", data.user)
 
     useEffect(() => {
         if (token) {
-            loadCreditsData()
+            loadCreditsData();
         }
     }, [token])
 
